@@ -1,0 +1,3 @@
+@ECHO Starting bot... 
+cmd /c "python main.py"
+@pause
