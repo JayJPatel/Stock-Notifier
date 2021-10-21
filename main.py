@@ -13,9 +13,8 @@ except WebDriverException as err:
         @\nhttps://sites.google.com/a/chromium.org/chromedriver/downloads")
     exit()
 
-tool.startup()
-
-try :  
+try : 
+    tool.startup() 
     tool.check_in_stock() 
     tool.send_email()
     tool.close()
