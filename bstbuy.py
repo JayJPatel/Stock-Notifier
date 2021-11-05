@@ -1,11 +1,13 @@
 import os
 import time
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from bot import BOT
 from dotenv import load_dotenv
 import undetected_chromedriver as uc
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
@@ -38,7 +40,6 @@ PRODUCT_TITLE = "v-fw-regular"
 # ---------------------------------------------------------------------------
 # CLASS - BSTBUY_BOT
 
-
 class BSTBUY_BOT(BOT):
     # Constructor
     def __init__(self):
@@ -49,16 +50,25 @@ class BSTBUY_BOT(BOT):
         self.driver.get(URL)
         print("Opening Best Buy browser...")
         time.sleep(1)
-        self.sku = self.driver.find_element(
-            By.CLASS_NAME, ADD_TO_CART).get_attribute(SKU)
+        try: 
+            self.sku = self.driver.find_element(By.CLASS_NAME, ADD_TO_CART).get_attribute(SKU)
+        except NoSuchElementException: 
+            print("\nError: Add to cart button not found.\nPlease ensure your Best Buy link is valid\n")
+            exit()
         return
 
     # Checks if product is in stock
     def check_in_stock(self):
         while(True):
             self.driver.refresh()
-            time.sleep(3)
-            if self.driver.find_element(By.CLASS_NAME, ADD_TO_CART):
+            # Wait until elem is located, else timeout & loop
+            try:  
+                elem_exists = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, ADD_TO_CART)))
+            except TimeoutException: 
+                print("Timeout Error: ATC Button not found.\nRefreshing page...")
+                continue 
+
+            if elem_exists:
                 text = self.driver.find_element(
                     By.CLASS_NAME, ADD_TO_CART).get_attribute(ATC_STATE)
                 if (text == "SOLD_OUT"):
